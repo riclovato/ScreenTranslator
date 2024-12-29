@@ -16,7 +16,13 @@ class ScreenshotApp:
         self.btn_selection.pack(pady=5)
 
     def capture_full(self):
-        print("Implementando")
+        #minimiza a janela
+        self.root.iconify()
+        self.root.after(1000)
+
+        #captura a tela
+        screenshot = pyautogui.screenshot()
+        screenshot.save("screenshot.png")
     
     def capture_selection(self):
         print("Implementando")
