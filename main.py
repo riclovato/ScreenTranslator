@@ -1,7 +1,7 @@
 import tkinter as tk
 from screenshot import ScreenCapture
 from ocr_processor import OCRProcessor
-
+from translator import Translator
 
 class MainApp:
     def __init__(self):
@@ -34,8 +34,13 @@ class MainApp:
 
         self.text_output = tk.Text(self.root, height=10, width=50)
         self.text_output.pack(pady=5)
+        
+        self.text_tranlated = tk.Text(self.root, height=20, width=50)
+        self.text_tranlated.pack(pady=5)
+
 
         self.ocr = OCRProcessor()
+        self.translator = Translator()
 
     def capture_full(self):
         image_path = self.screen_capture.capture_full()
@@ -49,6 +54,7 @@ class MainApp:
             selected_lang = self.language_mapping[self.selected_language.get()]
             text = self.ocr.extract_text(image_path, selected_lang)
             self.display_text(text)
+            self.display_translated_text(text)
     
     def display_text(self, text):
         self.text_output.delete('1.0', tk.END)
@@ -56,6 +62,14 @@ class MainApp:
             self.text_output.insert('1.0', text)
         else:
             self.text_output.insert('1.0', "Nenhum texto encontrado")
+    
+    def display_translated_text(self, text):
+        self.text_tranlated.delete('1.0', tk.END)
+        if text:
+            translated_text = self.translator.translated_text(text, target_language ="pt")
+            self.text_tranlated.insert('1.0', translated_text)
+        else:
+            self.text_tranlated.insert('1.0', "Nenhum texto encontrado")
 
     def run(self):
         self.root.mainloop()
