@@ -13,15 +13,17 @@ class MainApp:
             "Chinês Tradicional": "chi_tra",
             "Francês": "fra",
             "Espanhol": "spa",
+            "Portugês": "pt",
         }
-        self.selected_language = tk.StringVar(value="Inglês")
+        self.source_language = tk.StringVar(value="Inglês")
+        self.target_language = tk.StringVar(value="Portugês")
         #inicia o módulo de captura
         self.screen_capture = ScreenCapture(self.root)
         
         #menu de idiomas
-        tk.Label(self.root, text="Selecione o Idioma:").pack(pady=5)
+        tk.Label(self.root, text="Selecione o Idioma de Origem:").pack(pady=5)
         self.language_menu = tk.OptionMenu(
-            self.root, self.selected_language, *self.language_mapping.keys()
+            self.root, self.source_language, *self.language_mapping.keys()
         )
         self.language_menu.pack(pady=5)
 
@@ -38,6 +40,11 @@ class MainApp:
         self.text_tranlated = tk.Text(self.root, height=20, width=50)
         self.text_tranlated.pack(pady=5)
 
+        tk.Label(self.root, text = "Idioma de Destino: ").pack(pady=5)
+        self.translation_menu = tk.OptionMenu(
+            self.root, self.target_language, *self.language_mapping.keys()
+        )
+        self.translation_menu.pack(pady=5)
 
         self.ocr = OCRProcessor()
         self.translator = Translator()
@@ -51,7 +58,7 @@ class MainApp:
     def capture_selection(self):
         image_path = self.screen_capture.capture_selection()
         if image_path:
-            selected_lang = self.language_mapping[self.selected_language.get()]
+            selected_lang = self.language_mapping[self.source_language.get()]
             text = self.ocr.extract_text(image_path, selected_lang)
             self.display_text(text)
             self.display_translated_text(text)
@@ -66,8 +73,14 @@ class MainApp:
     def display_translated_text(self, text):
         self.text_tranlated.delete('1.0', tk.END)
         if text:
-            translated_text = self.translator.translated_text(text, target_language ="pt")
-            self.text_tranlated.insert('1.0', translated_text)
+            selected_target = self.target_language.get()
+            target_lang = self.language_mapping[selected_target]
+            translated_text = self.translator.translated_text(text,target_lang)
+            print(target_lang)
+            if translated_text:
+                self.text_tranlated.insert('1.0', translated_text)
+            else:
+                self.text_translated.insert('1.0', "Erro na Tradução")
         else:
             self.text_tranlated.insert('1.0', "Nenhum texto encontrado")
 
