@@ -13,8 +13,8 @@ class MainApp:
             "Chinês Tradicional": "chi_tra",
             "Francês": "fra",
             "Espanhol": "spa",
-            "Portugês": "pt",
-        }
+            "Portugês": "por",  
+                                }
         self.source_language = tk.StringVar(value="Inglês")
         self.target_language = tk.StringVar(value="Portugês")
         #inicia o módulo de captura
@@ -50,11 +50,56 @@ class MainApp:
         self.translator = Translator()
 
     def capture_full(self):
-        image_path = self.screen_capture.capture_full()
-        selected_lang = self.language_mapping[self.selected_language.get()]
-        text = self.ocr.extract_text(image_path, selected_lang)
-        print(f'Texto extraído: {text}')
+        try:
+            # Captura a tela
+            image_path = self.screen_capture.capture_full()
+            if not image_path:
+                print("Erro: Falha ao capturar a tela")
+                self.display_text("Erro ao capturar a tela")
+                return None
+                
+            # Extrai texto com posições
+            selected_lang = self.language_mapping[self.source_language.get()]
+            print(f"Processando OCR com idioma: {selected_lang}")
+            
+            text_blocks = self.ocr.extract_text_with_positions(image_path, selected_lang)
+            
+            if not text_blocks:
+                print("Nenhum texto encontrado na imagem")
+                self.display_text("Nenhum texto encontrado")
+                return image_path
+                
+            # Traduz todos os textos
+            target_lang = self.language_mapping[self.target_language.get()]
+            translations = []
+            
+            
+            print(f"Iniciando tradução para {target_lang}")
+            for block in text_blocks:
+                if block and block.text and block.text.strip():  # Verifica se o texto não está vazio
+                    translated = self.translator.translated_text(block.text, target_lang)
+                    if translated and translated != "Erro na tradução":
+                        translations.append((block, translated))
+            
+                    else:
+                        print(f"Falha ao traduzir texto: {block.text}")
+            
+            if not translations:
+                print("Nenhuma tradução foi gerada")
+                self.display_text("Não foi possível traduzir os textos encontrados")
+                return image_path
+                
+            # Sobrepõe traduções na imagem
+            result_path = self.screen_capture.overlay_translations(image_path, translations)
+            
+            return result_path
+       
+        except Exception as e:
+            print(f"Erro durante a captura: {e}")
+            self.display_text(f"Erro: {str(e)}")
+            return None
 
+        
     def capture_selection(self):
         image_path = self.screen_capture.capture_selection()
         if image_path:
@@ -72,15 +117,14 @@ class MainApp:
     
     def display_translated_text(self, text):
         self.text_tranlated.delete('1.0', tk.END)
-        if text:
+        if text and isinstance(text, str):  # Verifica se text é uma string válida
             selected_target = self.target_language.get()
             target_lang = self.language_mapping[selected_target]
-            translated_text = self.translator.translated_text(text,target_lang)
-            print(target_lang)
+            translated_text = self.translator.translated_text(text, target_lang)
             if translated_text:
                 self.text_tranlated.insert('1.0', translated_text)
             else:
-                self.text_translated.insert('1.0', "Erro na Tradução")
+                self.text_tranlated.insert('1.0', "Erro na Tradução")
         else:
             self.text_tranlated.insert('1.0', "Nenhum texto encontrado")
 
